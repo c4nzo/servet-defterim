@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Servet Defterim</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#16213B">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
@@ -1548,6 +1552,12 @@ $('restoreFileInput').addEventListener('change', (e)=>{
 $('dateInput').value = new Date().toISOString().slice(0,10);
 populateCategories();
 loadAll();
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js').catch(e=> console.log('SW kayıt hatası (önemli değil):', e));
+  });
+}
 </script>
 </body>
 </html>
