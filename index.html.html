@@ -1,0 +1,1553 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Servet Defterim</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root{
+  --cover: #16213B;
+  --cover-deep: #0F1830;
+  --gold: #B8892B;
+  --gold-light: #D9AE5C;
+  --paper: #F2ECDD;
+  --paper-line: #DCD3B8;
+  --ink: #1B2A4A;
+  --ink-soft: #5B6A8A;
+  --credit: #2F6F4E;
+  --credit-bg: #E4EEE6;
+  --debit: #A13D2E;
+  --debit-bg: #F3E4DF;
+  --radius: 14px;
+}
+
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  background: var(--cover-deep);
+  font-family:'Inter',sans-serif;
+  color:var(--ink);
+  padding:24px 16px 60px;
+}
+
+.wrap{max-width:1080px;margin:0 auto;}
+
+/* error banner */
+.error-banner{
+  display:none;
+  background:#5A2A22;
+  color:#F3D9CF;
+  border:1px solid var(--debit);
+  border-radius:10px;
+  padding:12px 16px;
+  font-size:13px;
+  margin-bottom:16px;
+  line-height:1.5;
+}
+.error-banner.show{display:block;}
+.error-banner.success{background:#1E3A2C;color:#CFE8D9;border-color:var(--credit);}
+
+/* Cover */
+.cover{
+  background: linear-gradient(160deg, var(--cover) 0%, var(--cover-deep) 100%);
+  border-radius: var(--radius);
+  padding:32px 28px;
+  margin-bottom:20px;
+  position:relative;
+  overflow:hidden;
+  border:1px solid #2A3B60;
+}
+.cover::before{
+  content:"";
+  position:absolute;
+  inset:8px;
+  border:1px solid rgba(184,137,43,0.35);
+  border-radius:10px;
+  pointer-events:none;
+}
+.cover h1{
+  font-family:'Fraunces',serif;
+  font-weight:600;
+  font-size:clamp(28px,5vw,40px);
+  color:var(--gold-light);
+  margin:0 0 6px;
+  letter-spacing:0.3px;
+}
+.cover p{
+  margin:0;
+  color:#A9B6D6;
+  font-size:14px;
+  letter-spacing:0.5px;
+}
+.cover .eyebrow{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;
+  letter-spacing:2.5px;
+  color:var(--gold);
+  text-transform:uppercase;
+  margin-bottom:10px;
+  display:block;
+}
+
+/* Top grid: goal stamp + summary */
+.top-grid{
+  display:grid;
+  grid-template-columns: 300px 1fr;
+  gap:16px;
+  margin-bottom:16px;
+}
+@media (max-width:720px){
+  .top-grid{grid-template-columns:1fr;}
+}
+
+.card{
+  background:var(--paper);
+  border-radius:var(--radius);
+  border:1px solid var(--paper-line);
+  padding:20px;
+}
+
+.goal-card{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  text-align:center;
+  position:relative;
+}
+.goal-card h3{
+  font-family:'Fraunces',serif;
+  font-size:15px;
+  margin:0 0 10px;
+  text-transform:uppercase;
+  letter-spacing:1.5px;
+  color:var(--ink-soft);
+}
+.milestone-select{
+  width:100%;margin-bottom:12px;font-size:13px;
+}
+.gauge-wrap{position:relative;width:170px;height:170px;margin-bottom:10px;}
+.gauge-pct{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;
+}
+.gauge-pct .num{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:24px;font-weight:600;color:var(--ink);
+}
+.gauge-pct .lbl{font-size:9.5px;color:var(--ink-soft);letter-spacing:1px;margin-top:2px;text-align:center;padding:0 10px;}
+.goal-target{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:13px;color:var(--ink-soft);margin-top:4px;
+}
+.countdown-badge{
+  margin-top:10px;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:12px;
+  font-weight:600;
+  padding:6px 14px;
+  border-radius:20px;
+  display:inline-block;
+}
+.countdown-badge.far{background:var(--credit-bg);color:var(--credit);}
+.countdown-badge.soon{background:#F5EBD6;color:var(--gold);}
+.countdown-badge.urgent{background:var(--debit-bg);color:var(--debit);animation:pulse 1.4s ease-in-out infinite;}
+.countdown-badge.overdue{background:var(--debit-bg);color:var(--debit);animation:pulse 1.4s ease-in-out infinite;}
+@keyframes pulse{
+  0%,100%{transform:scale(1);}
+  50%{transform:scale(1.06);}
+}
+.goal-empty{color:var(--ink-soft);font-size:12.5px;padding:30px 6px;line-height:1.6;}
+
+.summary-row{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+}
+@media (max-width:520px){
+  .summary-row{grid-template-columns:1fr;}
+}
+.stat{
+  background:var(--paper);
+  border:1px solid var(--paper-line);
+  border-radius:var(--radius);
+  padding:18px;
+  position:relative;
+}
+.stat::before{
+  content:"";
+  position:absolute;left:18px;top:0;bottom:0;width:2px;
+  background: currentColor;
+  opacity:0.25;
+}
+.stat.gelir{color:var(--credit);}
+.stat.gider{color:var(--debit);}
+.stat.net{color:var(--gold);}
+.stat .lbl{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--ink-soft);margin-bottom:6px;padding-left:10px;
+}
+.stat .val{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:22px;font-weight:600;padding-left:10px;color:var(--ink);
+}
+.stat.net .val{color:var(--gold);}
+
+/* accounts / portfolio */
+.accounts-card{margin-bottom:16px;}
+.accounts-head{
+  display:flex;justify-content:space-between;align-items:flex-end;
+  flex-wrap:wrap;gap:10px;margin-bottom:16px;
+}
+.accounts-head h3{
+  font-family:'Fraunces',serif;font-size:16px;margin:0;color:var(--ink);
+}
+.portfolio-total{text-align:right;}
+.portfolio-total .lbl{
+  font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--ink-soft);
+}
+.portfolio-total .val{
+  font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:600;color:var(--gold);
+}
+
+.accounts-body{
+  display:grid;
+  grid-template-columns: 300px 1fr;
+  gap:18px;
+}
+@media (max-width:760px){
+  .accounts-body{grid-template-columns:1fr;}
+}
+
+.acc-form{display:flex;flex-direction:column;gap:10px;}
+.acc-form .field label{font-size:11px;color:var(--ink-soft);letter-spacing:0.5px;}
+
+.acc-list{display:flex;flex-direction:column;gap:8px;max-height:340px;overflow-y:auto;}
+.acc-row{
+  display:grid;
+  grid-template-columns: 1fr auto auto auto;
+  align-items:center;
+  gap:10px;
+  padding:11px 12px;
+  border:1px solid var(--paper-line);
+  border-radius:10px;
+  background:#fff;
+}
+.acc-row .acc-name{font-weight:600;font-size:13.5px;color:var(--ink);}
+.acc-row .acc-type{
+  font-size:10px;padding:2px 8px;border-radius:20px;
+  display:inline-block;margin-top:3px;color:#fff;
+}
+.acc-row .acc-bal{
+  font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:14px;white-space:nowrap;
+}
+.acc-row .acc-bal.debt{color:var(--debit);}
+.acc-row .acc-bal.asset{color:var(--credit);}
+.acc-row .acc-actions{display:flex;gap:4px;}
+.acc-row .acc-actions button{
+  background:none;border:none;cursor:pointer;font-size:14px;color:var(--ink-soft);padding:2px 5px;
+}
+.acc-row .acc-actions button:hover{color:var(--gold);}
+.acc-row .acc-actions .del-acc:hover{color:var(--debit);}
+
+/* milestones */
+.milestones-card{margin-bottom:16px;}
+.milestones-card h3, .wishlist-card h3{
+  font-family:'Fraunces',serif;font-size:16px;margin:0 0 14px;color:var(--ink);
+}
+.milestone-body{display:grid;grid-template-columns:280px 1fr;gap:18px;}
+@media (max-width:760px){ .milestone-body{grid-template-columns:1fr;} }
+.ms-form{display:flex;flex-direction:column;gap:10px;}
+.ms-form .field label{font-size:11px;color:var(--ink-soft);letter-spacing:0.5px;}
+.ms-list{display:flex;flex-direction:column;gap:10px;max-height:400px;overflow-y:auto;}
+.ms-row{
+  border:1px solid var(--paper-line);
+  border-radius:10px;
+  background:#fff;
+  padding:12px 14px;
+}
+.ms-row-top{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
+  margin-bottom:8px;
+}
+.ms-title{font-weight:700;font-size:14px;color:var(--ink);font-family:'Fraunces',serif;}
+.ms-date{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);}
+.ms-meta{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:12px;color:var(--ink-soft);margin-bottom:8px;}
+.ms-amt{font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--ink);}
+.progress-bar-mini{height:7px;background:var(--paper-line);border-radius:5px;overflow:hidden;margin-bottom:8px;}
+.progress-bar-mini .fill{height:100%;background:var(--gold);border-radius:5px;}
+.ms-bottom{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;}
+.ms-actions{display:flex;gap:4px;}
+.ms-actions button{background:none;border:none;cursor:pointer;font-size:14px;color:var(--ink-soft);padding:2px 5px;}
+.ms-actions button:hover{color:var(--gold);}
+.ms-actions .del-ms:hover{color:var(--debit);}
+
+/* wishlist */
+.wish-body{display:grid;grid-template-columns:280px 1fr;gap:18px;}
+@media (max-width:760px){ .wish-body{grid-template-columns:1fr;} }
+.wl-form{display:flex;flex-direction:column;gap:10px;}
+.wl-form .field label{font-size:11px;color:var(--ink-soft);letter-spacing:0.5px;}
+.wl-list{display:flex;flex-direction:column;gap:8px;max-height:360px;overflow-y:auto;}
+.wl-row{
+  display:flex;align-items:center;gap:12px;
+  border:1px solid var(--paper-line);
+  border-radius:10px;background:#fff;padding:10px 12px;
+  position:relative;overflow:hidden;
+}
+.wl-check{
+  width:22px;height:22px;border-radius:50%;
+  border:2px solid var(--gold);
+  flex-shrink:0;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;color:transparent;background:transparent;
+}
+.wl-row.done .wl-check{background:var(--credit);border-color:var(--credit);color:#fff;}
+.wl-info{flex:1;min-width:0;}
+.wl-title{font-size:13.5px;font-weight:600;color:var(--ink);}
+.wl-row.done .wl-title{text-decoration:line-through;color:var(--ink-soft);}
+.wl-amt{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink-soft);margin-top:2px;}
+.wl-stamp{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10px;font-weight:700;letter-spacing:1px;
+  color:var(--debit);
+  border:1.5px solid var(--debit);
+  border-radius:4px;padding:2px 8px;
+  transform:rotate(-8deg);
+  text-transform:uppercase;
+  opacity:0.85;
+}
+.wl-del{background:none;border:none;cursor:pointer;font-size:15px;color:var(--ink-soft);}
+.wl-del:hover{color:var(--debit);}
+
+/* form */
+.form-card{margin-bottom:16px;}
+.form-card h3{
+  font-family:'Fraunces',serif;
+  font-size:16px;margin:0 0 14px;color:var(--ink);
+}
+.type-toggle{display:flex;gap:8px;margin-bottom:14px;}
+.type-toggle button{
+  flex:1;
+  padding:10px;
+  border-radius:8px;
+  border:1.5px solid var(--paper-line);
+  background:transparent;
+  font-family:'Inter',sans-serif;
+  font-weight:600;
+  font-size:13px;
+  cursor:pointer;
+  color:var(--ink-soft);
+  transition:all .15s;
+}
+.type-toggle button.active.gelir{background:var(--credit-bg);border-color:var(--credit);color:var(--credit);}
+.type-toggle button.active.gider{background:var(--debit-bg);border-color:var(--debit);color:var(--debit);}
+
+.form-grid{
+  display:grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap:10px;
+}
+@media (max-width:800px){
+  .form-grid{grid-template-columns:1fr 1fr;}
+}
+.field{display:flex;flex-direction:column;gap:4px;}
+.field label{font-size:11px;color:var(--ink-soft);letter-spacing:0.5px;}
+.field.desc{grid-column: 1 / -1;}
+
+input,select{
+  font-family:'Inter',sans-serif;
+  padding:9px 10px;
+  border-radius:8px;
+  border:1.5px solid var(--paper-line);
+  background:#fff;
+  font-size:14px;
+  color:var(--ink);
+  width:100%;
+}
+input:focus,select:focus,button:focus{
+  outline:2px solid var(--gold);
+  outline-offset:1px;
+}
+
+.btn-primary{
+  margin-top:12px;
+  width:100%;
+  padding:11px;
+  border-radius:8px;
+  border:none;
+  background:var(--ink);
+  color:var(--gold-light);
+  font-family:'IBM Plex Mono',monospace;
+  font-weight:600;
+  font-size:13px;
+  letter-spacing:1px;
+  cursor:pointer;
+  text-transform:uppercase;
+}
+.btn-primary:hover{background:var(--cover);}
+
+.btn-mini{
+  padding:9px 12px;
+  border-radius:8px;
+  border:1.5px solid var(--gold);
+  background:var(--gold);
+  color:#fff;
+  font-size:12px;
+  font-weight:600;
+  cursor:pointer;
+}
+
+/* bottom grid: ledger + donut */
+.bottom-grid{
+  display:grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap:16px;
+}
+@media (max-width:820px){
+  .bottom-grid{grid-template-columns:1fr;}
+}
+
+.ledger-card h3, .chart-card h3{
+  font-family:'Fraunces',serif;
+  font-size:16px;margin:0 0 14px;color:var(--ink);
+}
+
+.ledger-list{
+  max-height:480px;
+  overflow-y:auto;
+  border-top:1px solid var(--paper-line);
+}
+.ledger-row{
+  display:grid;
+  grid-template-columns: 78px 1fr auto 26px;
+  align-items:center;
+  gap:10px;
+  padding:10px 4px;
+  border-bottom:1px dashed var(--paper-line);
+  font-size:13px;
+}
+.ledger-row .date{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;color:var(--ink-soft);
+}
+.ledger-row .desc-wrap{min-width:0;}
+.ledger-row .cat{
+  display:inline-block;
+  font-size:10px;
+  padding:2px 7px;
+  border-radius:20px;
+  background:var(--paper-line);
+  color:var(--ink-soft);
+  margin-bottom:2px;
+  margin-right:4px;
+}
+.ledger-row .acc-tag{
+  display:inline-block;
+  font-size:10px;
+  padding:2px 7px;
+  border-radius:20px;
+  background:var(--cover);
+  color:var(--gold-light);
+  margin-bottom:2px;
+}
+.ledger-row .desc{color:var(--ink);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ledger-row .amt{
+  font-family:'IBM Plex Mono',monospace;
+  font-weight:600;
+  font-size:13.5px;
+  white-space:nowrap;
+}
+.ledger-row .amt.gelir{color:var(--credit);}
+.ledger-row .amt.gider{color:var(--debit);}
+.ledger-row .del{
+  background:none;border:none;color:var(--ink-soft);
+  cursor:pointer;font-size:16px;opacity:0.5;
+}
+.ledger-row .del:hover{opacity:1;color:var(--debit);}
+.empty-state{
+  padding:40px 10px;text-align:center;color:var(--ink-soft);font-size:13px;
+}
+
+/* donut */
+.chart-toggle{display:flex;gap:6px;margin-bottom:14px;}
+.chart-toggle button{
+  padding:6px 12px;border-radius:20px;border:1.5px solid var(--paper-line);
+  background:transparent;font-size:12px;cursor:pointer;color:var(--ink-soft);font-weight:600;
+}
+.chart-toggle button.active{background:var(--ink);color:var(--gold-light);border-color:var(--ink);}
+.donut-wrap{display:flex;justify-content:center;margin-bottom:10px;position:relative;}
+.donut-slice{cursor:pointer;transition:opacity .15s ease, filter .15s ease;}
+.donut-slice.dimmed{opacity:0.35;}
+.donut-slice.active-slice{filter:brightness(1.08);}
+.donut-leader{stroke:var(--ink-soft);stroke-width:1;opacity:0.5;transition:opacity .15s ease;pointer-events:none;}
+.donut-leader.dimmed{opacity:0.12;}
+.donut-label{
+  font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:600;fill:var(--ink);
+  cursor:pointer;transition:opacity .15s ease;
+}
+.donut-label.dimmed{opacity:0.3;}
+.donut-label tspan.pct{fill:var(--ink-soft);font-weight:500;}
+.donut-caption{
+  min-height:18px;
+  text-align:center;
+  font-size:12px;
+  color:var(--ink-soft);
+  margin-bottom:14px;
+  font-family:'IBM Plex Mono',monospace;
+}
+.donut-caption b{color:var(--ink);font-weight:700;}
+.legend{display:flex;flex-direction:column;gap:8px;}
+.legend-item{display:flex;align-items:center;gap:8px;font-size:12.5px;cursor:pointer;transition:opacity .15s ease;padding:2px 4px;border-radius:6px;}
+.legend-item:hover{background:var(--paper-line);}
+.legend-item.dimmed{opacity:0.4;}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.legend-name{flex:1;color:var(--ink);}
+.legend-pct{font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--ink-soft);}
+
+/* averages */
+.avg-card{margin-bottom:16px;}
+.avg-card h3{font-family:'Fraunces',serif;font-size:16px;margin:0 0 4px;color:var(--ink);}
+.avg-sub{font-size:12px;color:var(--ink-soft);margin-bottom:16px;}
+.avg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+@media (max-width:640px){ .avg-grid{grid-template-columns:1fr;} }
+.avg-col{
+  border:1px solid var(--paper-line);border-radius:10px;background:#fff;padding:16px;
+}
+.avg-col .avg-title{
+  font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--ink-soft);margin-bottom:10px;
+}
+.avg-line{display:flex;justify-content:space-between;align-items:center;font-size:13.5px;margin-bottom:6px;}
+.avg-line .amt{font-family:'IBM Plex Mono',monospace;font-weight:600;}
+.avg-line.gelir .amt{color:var(--credit);}
+.avg-line.gider .amt{color:var(--debit);}
+.avg-line.net{border-top:1px dashed var(--paper-line);padding-top:8px;margin-top:6px;}
+.avg-line.net .amt{color:var(--gold);}
+.avg-count{font-size:10.5px;color:var(--ink-soft);margin-top:6px;}
+
+.footer-note{
+  text-align:center;color:#6C7BA0;font-size:11.5px;margin-top:24px;letter-spacing:0.3px;
+}
+
+.backup-card{margin-bottom:16px;}
+.backup-card h3{font-family:'Fraunces',serif;font-size:16px;margin:0 0 8px;color:var(--ink);}
+.backup-sub{font-size:12.5px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;}
+.backup-actions{display:flex;gap:10px;flex-wrap:wrap;}
+.backup-actions .btn-mini{background:var(--ink);border-color:var(--ink);color:var(--gold-light);}
+.backup-actions .restore-btn{background:transparent;color:var(--ink);border-color:var(--paper-line);}
+
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-thumb{background:var(--paper-line);border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="error-banner" id="errorBanner"></div>
+
+  <div class="cover">
+    <span class="eyebrow">Kişisel Finans</span>
+    <h1>Servet Defterim</h1>
+    <p>Hesapların, gelir & gider kayıtların, hedeflerin ve dileklerin — tek yerde.</p>
+  </div>
+
+  <div class="top-grid">
+    <div class="card goal-card">
+      <h3>Hedef Damgası</h3>
+      <select class="milestone-select" id="milestoneSelect"></select>
+      <div id="goalGaugeArea">
+        <div class="gauge-wrap">
+          <svg width="170" height="170" viewBox="0 0 170 170">
+            <circle cx="85" cy="85" r="72" fill="none" stroke="#DCD3B8" stroke-width="14"/>
+            <circle id="gaugeArc" cx="85" cy="85" r="72" fill="none" stroke="#B8892B" stroke-width="14"
+                    stroke-linecap="round" stroke-dasharray="452.4" stroke-dashoffset="452.4"
+                    transform="rotate(-90 85 85)"/>
+          </svg>
+          <div class="gauge-pct">
+            <span class="num" id="gaugeNum">0%</span>
+            <span class="lbl" id="gaugeLbl">HEDEFE ULAŞILDI</span>
+          </div>
+        </div>
+        <div class="goal-target">Hedef: <span id="goalDisplay">—</span></div>
+        <span class="countdown-badge far" id="countdownBadge">—</span>
+      </div>
+    </div>
+
+    <div class="summary-row">
+      <div class="stat gelir">
+        <div class="lbl">Toplam Gelir</div>
+        <div class="val" id="totalGelir">0 ₺</div>
+      </div>
+      <div class="stat gider">
+        <div class="lbl">Toplam Gider</div>
+        <div class="val" id="totalGider">0 ₺</div>
+      </div>
+      <div class="stat net">
+        <div class="lbl">Nakit Akış Net</div>
+        <div class="val" id="netBalance">0 ₺</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card accounts-card">
+    <div class="accounts-head">
+      <h3>Hesaplarım & Portföy</h3>
+      <div class="portfolio-total">
+        <div class="lbl">Toplam Portföy Değeri</div>
+        <div class="val" id="portfolioTotal">0 ₺</div>
+      </div>
+    </div>
+    <div class="accounts-body">
+      <div class="acc-form">
+        <div class="field">
+          <label>Hesap Adı</label>
+          <input type="text" id="accNameInput" placeholder="ör. Garanti BBVA Vadesiz">
+        </div>
+        <div class="field">
+          <label>Tür</label>
+          <select id="accTypeSelect">
+            <option value="Banka Hesabı">Banka Hesabı</option>
+            <option value="Kredi Kartı">Kredi Kartı (borç)</option>
+            <option value="Nakit">Nakit</option>
+            <option value="Yatırım">Yatırım</option>
+            <option value="Diğer">Diğer</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Bakiye (₺)</label>
+          <input type="number" id="accBalanceInput" placeholder="0" step="0.01">
+        </div>
+        <button class="btn-primary" id="accAddBtn">Hesabı Kaydet</button>
+      </div>
+      <div class="acc-list" id="accList"></div>
+    </div>
+  </div>
+
+  <div class="card milestones-card">
+    <h3>Hedeflerim</h3>
+    <div class="milestone-body">
+      <div class="ms-form">
+        <div class="field">
+          <label>Hedef Adı</label>
+          <input type="text" id="msTitleInput" placeholder="ör. 23 Yaş Hedefi">
+        </div>
+        <div class="field">
+          <label>Hedef Tutarı (₺)</label>
+          <input type="number" id="msAmountInput" placeholder="1000000" min="0" step="0.01">
+        </div>
+        <div class="field">
+          <label>Tarih</label>
+          <input type="date" id="msDateInput">
+        </div>
+        <button class="btn-primary" id="msAddBtn">Hedefi Kaydet</button>
+      </div>
+      <div class="ms-list" id="msList"></div>
+    </div>
+  </div>
+
+  <div class="card wishlist-card">
+    <h3>İsteklerim</h3>
+    <div class="wish-body">
+      <div class="wl-form">
+        <div class="field">
+          <label>İstek</label>
+          <input type="text" id="wlTitleInput" placeholder="ör. Araba">
+        </div>
+        <div class="field">
+          <label>Tahmini Tutar (₺, opsiyonel)</label>
+          <input type="number" id="wlAmountInput" placeholder="0" min="0" step="0.01">
+        </div>
+        <button class="btn-primary" id="wlAddBtn">İsteği Ekle</button>
+      </div>
+      <div class="wl-list" id="wlList"></div>
+    </div>
+  </div>
+
+  <div class="card form-card">
+    <h3>Yeni Kayıt Ekle</h3>
+    <div class="type-toggle">
+      <button type="button" class="active gelir" id="btnTypeGelir" data-type="gelir">↑ Gelir</button>
+      <button type="button" class="gider" id="btnTypeGider" data-type="gider">↓ Gider</button>
+    </div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Kategori</label>
+        <select id="catSelect"></select>
+      </div>
+      <div class="field">
+        <label>Hesap</label>
+        <select id="txAccountSelect"></select>
+      </div>
+      <div class="field">
+        <label>Tutar (₺)</label>
+        <input type="number" id="amountInput" placeholder="0" min="0" step="0.01">
+      </div>
+      <div class="field">
+        <label>Tarih</label>
+        <input type="date" id="dateInput">
+      </div>
+      <div class="field desc">
+        <label>Açıklama (opsiyonel)</label>
+        <input type="text" id="descInput" placeholder="ör. Temmuz maaşı">
+      </div>
+    </div>
+    <button class="btn-primary" id="addBtn">Deftere Kaydet</button>
+  </div>
+
+  <div class="card avg-card">
+    <h3>Ortalama Gelir & Gider</h3>
+    <div class="avg-sub">Kayıtlı verinin bulunduğu her hafta / ay / yıl toplanarak ortalaması alınır.</div>
+    <div class="avg-grid" id="avgGrid"></div>
+  </div>
+
+  <div class="bottom-grid">
+    <div class="card ledger-card">
+      <h3>Kayıt Defteri</h3>
+      <div class="ledger-list" id="ledgerList"></div>
+    </div>
+
+    <div class="card chart-card">
+      <h3>Yüzdelik Dağılım</h3>
+      <div class="chart-toggle">
+        <button type="button" class="active" data-chart="gider" id="chartToggleGider">Giderler</button>
+        <button type="button" data-chart="gelir" id="chartToggleGelir">Gelirler</button>
+      </div>
+      <div class="donut-wrap">
+        <svg width="100%" height="260" viewBox="0 0 280 260" id="donutSvg" style="max-width:280px;"></svg>
+      </div>
+      <div class="donut-caption" id="donutCaption">Detay için bir dilime dokun</div>
+      <div class="legend" id="legendList"></div>
+    </div>
+  </div>
+
+  <div class="card backup-card">
+    <h3>Yedekleme</h3>
+    <div class="backup-sub">Tüm verilerin bu cihazın tarayıcı hafızasında saklanıyor. Tarayıcı verilerini temizlersen ya da telefonu değiştirirsen kaybolmaması için ara sıra bir yedek indirmen önerilir.</div>
+    <div class="backup-actions">
+      <button class="btn-mini" id="backupBtn">⬇ Yedek İndir</button>
+      <button class="btn-mini restore-btn" id="restoreBtn">⬆ Yedekten Geri Yükle</button>
+      <input type="file" id="restoreFileInput" accept="application/json" style="display:none;">
+    </div>
+  </div>
+
+  <div class="footer-note">Tüm verilerin bu cihazın tarayıcısına özel olarak, sadece burada saklanır · Hiçbir sunucuya gönderilmez · Kişisel kullanım içindir</div>
+</div>
+
+<script>
+const GELIR_KATEGORI = ['Maaş','Yatırım Geliri','Ek Gelir','Kira Geliri','Diğer Gelir'];
+const GIDER_KATEGORI = ['Kira','Market','Ulaşım','Faturalar','Sağlık','Eğlence','Giyim','Eğitim','Diğer Gider'];
+const PALETTE = ['#B8892B','#2F6F4E','#A13D2E','#5B6A8A','#8B5E3C','#3E6B8A','#7A5C99','#C97B4A','#4E7A6E'];
+const ACC_TYPE_COLOR = {
+  'Banka Hesabı': '#2F6F4E',
+  'Kredi Kartı': '#A13D2E',
+  'Nakit': '#B8892B',
+  'Yatırım': '#3E6B8A',
+  'Diğer': '#5B6A8A'
+};
+
+let transactions = [];
+let accounts = [];
+let milestones = [];
+let wishlist = [];
+let featuredMilestoneId = null;
+let currentType = 'gelir';
+let currentChart = 'gider';
+let editingAccountId = null;
+let editingMilestoneId = null;
+
+const $ = (id) => document.getElementById(id);
+
+function fmt(n){
+  return new Intl.NumberFormat('tr-TR',{maximumFractionDigits:0}).format(n) + ' ₺';
+}
+
+function showError(msg, type){
+  const el = $('errorBanner');
+  el.textContent = msg;
+  el.classList.add('show');
+  el.classList.toggle('success', type === 'success');
+  clearTimeout(showError._t);
+  showError._t = setTimeout(()=> el.classList.remove('show','success'), 6000);
+}
+
+/* ---------- storage: saved locally on THIS device, in the browser's own storage ---------- */
+const STORAGE_KEY = 'servet_defterim_state_v1';
+
+function loadAll(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const data = JSON.parse(raw);
+      transactions = data.transactions || [];
+      accounts = data.accounts || [];
+      milestones = data.milestones || [];
+      wishlist = data.wishlist || [];
+      featuredMilestoneId = data.featuredMilestoneId || null;
+    }
+  }catch(e){
+    console.error('Yükleme hatası', e);
+    showError('Kayıtlı veriler okunurken bir sorun oluştu. Tarayıcı hafızası bozulmuş olabilir.');
+  }
+  render();
+}
+
+function saveState(){
+  const payload = JSON.stringify({ transactions, accounts, milestones, wishlist, featuredMilestoneId });
+  try{
+    localStorage.setItem(STORAGE_KEY, payload);
+  }catch(e){
+    console.error('Kayıt hatası', e);
+    showError('Veri kaydedilemedi. Tarayıcı hafızası dolu olabilir — eski yedeklerini silmeyi veya bir yedek indirip temizlik yapmayı dene.');
+  }
+}
+
+function downloadBackup(){
+  const payload = JSON.stringify({ transactions, accounts, milestones, wishlist, featuredMilestoneId }, null, 2);
+  const blob = new Blob([payload], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = `servet-defterim-yedek-${stamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function restoreBackup(file){
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try{
+      const data = JSON.parse(e.target.result);
+      transactions = data.transactions || [];
+      accounts = data.accounts || [];
+      milestones = data.milestones || [];
+      wishlist = data.wishlist || [];
+      featuredMilestoneId = data.featuredMilestoneId || null;
+      saveState();
+      render();
+      showError('Yedek başarıyla geri yüklendi.', 'success');
+    }catch(err){
+      console.error('Geri yükleme hatası', err);
+      showError('Bu dosya okunamadı. Doğru yedek dosyasını seçtiğinden emin ol.');
+    }
+  };
+  reader.readAsText(file);
+}
+
+/* ---------- transactions ---------- */
+function populateCategories(){
+  const sel = $('catSelect');
+  sel.innerHTML = '';
+  const list = currentType === 'gelir' ? GELIR_KATEGORI : GIDER_KATEGORI;
+  list.forEach(c=>{
+    const opt = document.createElement('option');
+    opt.value = c; opt.textContent = c;
+    sel.appendChild(opt);
+  });
+}
+
+function populateAccountSelect(){
+  const sel = $('txAccountSelect');
+  const prevVal = sel.value;
+  sel.innerHTML = '<option value="">Hesapsız (bağlama)</option>';
+  accounts.forEach(a=>{
+    const opt = document.createElement('option');
+    opt.value = a.id; opt.textContent = `${a.name} (${a.type})`;
+    sel.appendChild(opt);
+  });
+  if([...sel.options].some(o=>o.value===prevVal)) sel.value = prevVal;
+}
+
+function setType(t){
+  currentType = t;
+  $('btnTypeGelir').classList.toggle('active', t==='gelir');
+  $('btnTypeGider').classList.toggle('active', t==='gider');
+  populateCategories();
+}
+
+function applyTxToAccount(tx, sign){
+  // sign = 1 to apply, -1 to reverse
+  if(!tx.accountId) return;
+  const acc = accounts.find(a=>a.id === tx.accountId);
+  if(!acc) return;
+  const isCard = acc.type === 'Kredi Kartı';
+  let delta = 0;
+  if(tx.type === 'gelir'){
+    delta = isCard ? -tx.amount : tx.amount;
+  } else {
+    delta = isCard ? tx.amount : -tx.amount;
+  }
+  acc.balance += sign * delta;
+}
+
+function addTransaction(){
+  const amount = parseFloat($('amountInput').value);
+  const date = $('dateInput').value || new Date().toISOString().slice(0,10);
+  const category = $('catSelect').value;
+  const desc = $('descInput').value.trim();
+  const accountId = $('txAccountSelect').value || null;
+  if(!amount || amount <= 0){
+    $('amountInput').focus();
+    return;
+  }
+  const tx = {
+    id: Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+    type: currentType, category, amount, date, desc, accountId
+  };
+  transactions.push(tx);
+  applyTxToAccount(tx, 1);
+  transactions.sort((a,b)=> b.date.localeCompare(a.date));
+  saveState();
+  $('amountInput').value = '';
+  $('descInput').value = '';
+  render();
+}
+
+function deleteTransaction(id){
+  const tx = transactions.find(t=>t.id === id);
+  if(tx) applyTxToAccount(tx, -1);
+  transactions = transactions.filter(t=>t.id !== id);
+  saveState();
+  render();
+}
+
+function computeTotals(){
+  let g=0, gi=0;
+  transactions.forEach(t=>{
+    if(t.type==='gelir') g += t.amount; else gi += t.amount;
+  });
+  return {gelir:g, gider:gi, net:g-gi};
+}
+
+/* ---------- accounts ---------- */
+function computePortfolioTotal(){
+  return accounts.reduce((sum, a)=>{
+    return sum + (a.type === 'Kredi Kartı' ? -Math.abs(a.balance) : a.balance);
+  }, 0);
+}
+
+function renderAccounts(){
+  const list = $('accList');
+  list.innerHTML = '';
+  if(accounts.length === 0){
+    list.innerHTML = '<div class="empty-state">Henüz hesap eklemedin. Soldaki formdan banka hesabı, kredi kartı ya da nakit ekleyebilirsin.</div>';
+  } else {
+    accounts.forEach(a=>{
+      const isDebt = a.type === 'Kredi Kartı';
+      const row = document.createElement('div');
+      row.className = 'acc-row';
+      row.innerHTML = `
+        <div>
+          <div class="acc-name">${a.name}</div>
+          <span class="acc-type" style="background:${ACC_TYPE_COLOR[a.type] || '#5B6A8A'}">${a.type}</span>
+        </div>
+        <div class="acc-bal ${isDebt ? 'debt' : 'asset'}">${isDebt ? '−' : ''}${fmt(Math.abs(a.balance))}</div>
+        <div class="acc-actions">
+          <button class="edit-acc" data-id="${a.id}" title="Düzenle">✎</button>
+          <button class="del-acc" data-id="${a.id}" title="Sil">×</button>
+        </div>
+      `;
+      list.appendChild(row);
+    });
+    list.querySelectorAll('.del-acc').forEach(btn=>{
+      btn.addEventListener('click', ()=> deleteAccount(btn.dataset.id));
+    });
+    list.querySelectorAll('.edit-acc').forEach(btn=>{
+      btn.addEventListener('click', ()=> startEditAccount(btn.dataset.id));
+    });
+  }
+  populateAccountSelect();
+}
+
+function addOrUpdateAccount(){
+  const name = $('accNameInput').value.trim();
+  const type = $('accTypeSelect').value;
+  const balance = parseFloat($('accBalanceInput').value);
+  if(!name || isNaN(balance)){
+    $('accNameInput').focus();
+    return;
+  }
+  if(editingAccountId){
+    const acc = accounts.find(a=>a.id === editingAccountId);
+    if(acc){ acc.name = name; acc.type = type; acc.balance = balance; }
+    editingAccountId = null;
+    $('accAddBtn').textContent = 'Hesabı Kaydet';
+  } else {
+    accounts.push({ id: Date.now().toString(36)+Math.random().toString(36).slice(2,6), name, type, balance });
+  }
+  saveState();
+  $('accNameInput').value = '';
+  $('accBalanceInput').value = '';
+  render();
+}
+
+function startEditAccount(id){
+  const acc = accounts.find(a=>a.id === id);
+  if(!acc) return;
+  editingAccountId = id;
+  $('accNameInput').value = acc.name;
+  $('accTypeSelect').value = acc.type;
+  $('accBalanceInput').value = acc.balance;
+  $('accAddBtn').textContent = 'Değişikliği Kaydet';
+  $('accNameInput').focus();
+}
+
+function deleteAccount(id){
+  accounts = accounts.filter(a=>a.id !== id);
+  if(editingAccountId === id){
+    editingAccountId = null;
+    $('accAddBtn').textContent = 'Hesabı Kaydet';
+    $('accNameInput').value = '';
+    $('accBalanceInput').value = '';
+  }
+  saveState();
+  render();
+}
+
+/* ---------- milestones (hedefler) ---------- */
+function computeCountdown(dateStr){
+  if(!dateStr) return {text:'Tarih yok', urgency:'far'};
+  const today = new Date(); today.setHours(0,0,0,0);
+  const target = new Date(dateStr); target.setHours(0,0,0,0);
+  const diffDays = Math.round((target - today) / 86400000);
+  if(diffDays < 0) return {text:`${Math.abs(diffDays)} gün geçti`, urgency:'overdue'};
+  if(diffDays === 0) return {text:'Bugün!', urgency:'urgent'};
+  if(diffDays <= 30) return {text:`${diffDays} gün kaldı`, urgency:'urgent'};
+  if(diffDays <= 90) return {text:`${diffDays} gün kaldı`, urgency:'soon'};
+  return {text:`${diffDays} gün kaldı`, urgency:'far'};
+}
+
+function formatDateTR(dateStr){
+  if(!dateStr) return '—';
+  const d = new Date(dateStr);
+  if(isNaN(d)) return dateStr;
+  return d.toLocaleDateString('tr-TR',{day:'2-digit',month:'long',year:'numeric'});
+}
+
+function pickDefaultMilestone(){
+  if(milestones.length === 0) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const upcoming = milestones.filter(m=> new Date(m.targetDate) >= today)
+    .sort((a,b)=> new Date(a.targetDate) - new Date(b.targetDate));
+  if(upcoming.length) return upcoming[0].id;
+  return milestones.slice().sort((a,b)=> new Date(b.targetDate)-new Date(a.targetDate))[0].id;
+}
+
+function renderFeaturedGoal(){
+  const sel = $('milestoneSelect');
+  sel.innerHTML = '';
+  if(milestones.length === 0){
+    sel.style.display = 'none';
+    $('goalGaugeArea').innerHTML = '<div class="goal-empty">Henüz hedef eklemedin.<br>Aşağıdaki "Hedeflerim" bölümünden bir hedef ve tarih ekleyebilirsin.</div>';
+    return;
+  }
+  sel.style.display = 'block';
+  if(!featuredMilestoneId || !milestones.some(m=>m.id === featuredMilestoneId)){
+    featuredMilestoneId = pickDefaultMilestone();
+  }
+  milestones.forEach(m=>{
+    const opt = document.createElement('option');
+    opt.value = m.id; opt.textContent = m.title;
+    if(m.id === featuredMilestoneId) opt.selected = true;
+    sel.appendChild(opt);
+  });
+
+  // rebuild gauge markup (in case it was replaced by empty-state before)
+  $('goalGaugeArea').innerHTML = `
+    <div class="gauge-wrap">
+      <svg width="170" height="170" viewBox="0 0 170 170">
+        <circle cx="85" cy="85" r="72" fill="none" stroke="#DCD3B8" stroke-width="14"/>
+        <circle id="gaugeArc" cx="85" cy="85" r="72" fill="none" stroke="#B8892B" stroke-width="14"
+                stroke-linecap="round" stroke-dasharray="452.4" stroke-dashoffset="452.4"
+                transform="rotate(-90 85 85)"/>
+      </svg>
+      <div class="gauge-pct">
+        <span class="num" id="gaugeNum">0%</span>
+        <span class="lbl" id="gaugeLbl">HEDEFE ULAŞILDI</span>
+      </div>
+    </div>
+    <div class="goal-target">Hedef: <span id="goalDisplay">—</span></div>
+    <span class="countdown-badge far" id="countdownBadge">—</span>
+  `;
+
+  const m = milestones.find(x=>x.id === featuredMilestoneId);
+  const portfolioTotal = computePortfolioTotal();
+  const pct = m.targetAmount > 0 ? Math.max(0, Math.min(100, (portfolioTotal/m.targetAmount)*100)) : 0;
+  const circumference = 2*Math.PI*72;
+  const offset = circumference - (pct/100)*circumference;
+  $('gaugeArc').setAttribute('stroke-dasharray', circumference.toFixed(1));
+  $('gaugeArc').setAttribute('stroke-dashoffset', offset.toFixed(1));
+  $('gaugeNum').textContent = pct.toFixed(1).replace('.0','') + '%';
+  $('gaugeLbl').textContent = m.title.toUpperCase();
+  $('goalDisplay').textContent = fmt(m.targetAmount);
+
+  const cd = computeCountdown(m.targetDate);
+  const badge = $('countdownBadge');
+  badge.textContent = cd.text;
+  badge.className = 'countdown-badge ' + cd.urgency;
+}
+
+function renderMilestones(){
+  const list = $('msList');
+  list.innerHTML = '';
+  if(milestones.length === 0){
+    list.innerHTML = '<div class="empty-state">Henüz hedef eklemedin. ör. "23 Yaş Hedefi", "24 Yaş Hedefi" gibi tarihli hedefler ekleyebilirsin.</div>';
+    return;
+  }
+  const portfolioTotal = computePortfolioTotal();
+  const sorted = milestones.slice().sort((a,b)=> new Date(a.targetDate) - new Date(b.targetDate));
+  sorted.forEach(m=>{
+    const pctRaw = m.targetAmount > 0 ? (portfolioTotal/m.targetAmount)*100 : 0;
+    const pctClamped = Math.max(0, Math.min(100, pctRaw));
+    const cd = computeCountdown(m.targetDate);
+    const row = document.createElement('div');
+    row.className = 'ms-row';
+    row.innerHTML = `
+      <div class="ms-row-top">
+        <span class="ms-title">${m.title}</span>
+        <span class="ms-date">${formatDateTR(m.targetDate)}</span>
+      </div>
+      <div class="progress-bar-mini"><div class="fill" style="width:${pctClamped}%"></div></div>
+      <div class="ms-meta">
+        <span>Hedef: <span class="ms-amt">${fmt(m.targetAmount)}</span></span>
+        <span>${pctRaw.toFixed(1)}%</span>
+      </div>
+      <div class="ms-bottom">
+        <span class="countdown-badge ${cd.urgency}">${cd.text}</span>
+        <div class="ms-actions">
+          <button class="edit-ms" data-id="${m.id}" title="Düzenle">✎</button>
+          <button class="del-ms" data-id="${m.id}" title="Sil">×</button>
+        </div>
+      </div>
+    `;
+    list.appendChild(row);
+  });
+  list.querySelectorAll('.del-ms').forEach(btn=>{
+    btn.addEventListener('click', ()=> deleteMilestone(btn.dataset.id));
+  });
+  list.querySelectorAll('.edit-ms').forEach(btn=>{
+    btn.addEventListener('click', ()=> startEditMilestone(btn.dataset.id));
+  });
+}
+
+function addOrUpdateMilestone(){
+  const title = $('msTitleInput').value.trim();
+  const targetAmount = parseFloat($('msAmountInput').value);
+  const targetDate = $('msDateInput').value;
+  if(!title || !targetAmount || targetAmount <= 0 || !targetDate){
+    $('msTitleInput').focus();
+    return;
+  }
+  if(editingMilestoneId){
+    const m = milestones.find(x=>x.id === editingMilestoneId);
+    if(m){ m.title = title; m.targetAmount = targetAmount; m.targetDate = targetDate; }
+    editingMilestoneId = null;
+    $('msAddBtn').textContent = 'Hedefi Kaydet';
+  } else {
+    const id = Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+    milestones.push({ id, title, targetAmount, targetDate });
+    if(!featuredMilestoneId) featuredMilestoneId = id;
+  }
+  saveState();
+  $('msTitleInput').value = '';
+  $('msAmountInput').value = '';
+  $('msDateInput').value = '';
+  render();
+}
+
+function startEditMilestone(id){
+  const m = milestones.find(x=>x.id === id);
+  if(!m) return;
+  editingMilestoneId = id;
+  $('msTitleInput').value = m.title;
+  $('msAmountInput').value = m.targetAmount;
+  $('msDateInput').value = m.targetDate;
+  $('msAddBtn').textContent = 'Değişikliği Kaydet';
+  $('msTitleInput').focus();
+}
+
+function deleteMilestone(id){
+  milestones = milestones.filter(m=>m.id !== id);
+  if(featuredMilestoneId === id) featuredMilestoneId = null;
+  if(editingMilestoneId === id){
+    editingMilestoneId = null;
+    $('msAddBtn').textContent = 'Hedefi Kaydet';
+    $('msTitleInput').value = '';
+    $('msAmountInput').value = '';
+    $('msDateInput').value = '';
+  }
+  saveState();
+  render();
+}
+
+/* ---------- wishlist (isteklerim) ---------- */
+function renderWishlist(){
+  const list = $('wlList');
+  list.innerHTML = '';
+  if(wishlist.length === 0){
+    list.innerHTML = '<div class="empty-state">Henüz istek eklemedin. ör. "Araba" ekleyip alınca işaretleyebilirsin.</div>';
+    return;
+  }
+  wishlist.forEach(w=>{
+    const row = document.createElement('div');
+    row.className = 'wl-row' + (w.done ? ' done' : '');
+    row.innerHTML = `
+      <button class="wl-check" data-id="${w.id}" title="Tamamlandı olarak işaretle">${w.done ? '✓' : ''}</button>
+      <div class="wl-info">
+        <div class="wl-title">${w.title}</div>
+        ${w.amount ? `<div class="wl-amt">${fmt(w.amount)}</div>` : ''}
+      </div>
+      ${w.done ? '<span class="wl-stamp">Alındı</span>' : ''}
+      <button class="wl-del" data-id="${w.id}" title="Sil">×</button>
+    `;
+    list.appendChild(row);
+  });
+  list.querySelectorAll('.wl-check').forEach(btn=>{
+    btn.addEventListener('click', ()=> toggleWish(btn.dataset.id));
+  });
+  list.querySelectorAll('.wl-del').forEach(btn=>{
+    btn.addEventListener('click', ()=> deleteWish(btn.dataset.id));
+  });
+}
+
+function addWish(){
+  const title = $('wlTitleInput').value.trim();
+  const amountRaw = $('wlAmountInput').value;
+  const amount = amountRaw ? parseFloat(amountRaw) : null;
+  if(!title){
+    $('wlTitleInput').focus();
+    return;
+  }
+  wishlist.push({ id: Date.now().toString(36)+Math.random().toString(36).slice(2,6), title, amount, done:false });
+  saveState();
+  $('wlTitleInput').value = '';
+  $('wlAmountInput').value = '';
+  render();
+}
+
+function toggleWish(id){
+  const w = wishlist.find(x=>x.id === id);
+  if(w) w.done = !w.done;
+  saveState();
+  render();
+}
+
+function deleteWish(id){
+  wishlist = wishlist.filter(w=>w.id !== id);
+  saveState();
+  render();
+}
+
+/* ---------- ledger list ---------- */
+function renderLedger(){
+  const list = $('ledgerList');
+  list.innerHTML = '';
+  if(transactions.length === 0){
+    list.innerHTML = '<div class="empty-state">Henüz kayıt yok. Yukarıdan ilk gelir/gider kaydını ekle.</div>';
+    return;
+  }
+  transactions.forEach(t=>{
+    const row = document.createElement('div');
+    row.className = 'ledger-row';
+    const d = new Date(t.date);
+    const dateStr = isNaN(d) ? t.date : d.toLocaleDateString('tr-TR',{day:'2-digit',month:'short'});
+    const acc = t.accountId ? accounts.find(a=>a.id === t.accountId) : null;
+    row.innerHTML = `
+      <div class="date">${dateStr}</div>
+      <div class="desc-wrap">
+        <span class="cat">${t.category}</span>
+        ${acc ? `<span class="acc-tag">${acc.name}</span>` : ''}
+        <div class="desc">${t.desc || '—'}</div>
+      </div>
+      <div class="amt ${t.type}">${t.type==='gelir'?'+':'−'}${fmt(t.amount)}</div>
+      <button class="del" title="Sil" data-id="${t.id}">×</button>
+    `;
+    list.appendChild(row);
+  });
+  list.querySelectorAll('.del').forEach(btn=>{
+    btn.addEventListener('click', ()=> deleteTransaction(btn.dataset.id));
+  });
+}
+
+/* ---------- donut chart (labeled, interactive) ---------- */
+const NS = 'http://www.w3.org/2000/svg';
+function polarPoint(cx, cy, r, angleDeg){
+  const rad = (angleDeg - 90) * Math.PI / 180;
+  return { x: cx + r*Math.cos(rad), y: cy + r*Math.sin(rad) };
+}
+function donutSlicePath(cx, cy, rOuter, rInner, startA, endA){
+  const so = polarPoint(cx,cy,rOuter,endA);
+  const eo = polarPoint(cx,cy,rOuter,startA);
+  const si = polarPoint(cx,cy,rInner,endA);
+  const ei = polarPoint(cx,cy,rInner,startA);
+  const large = (endA - startA) <= 180 ? 0 : 1;
+  return `M ${so.x.toFixed(2)} ${so.y.toFixed(2)} A ${rOuter} ${rOuter} 0 ${large} 0 ${eo.x.toFixed(2)} ${eo.y.toFixed(2)} L ${ei.x.toFixed(2)} ${ei.y.toFixed(2)} A ${rInner} ${rInner} 0 ${large} 1 ${si.x.toFixed(2)} ${si.y.toFixed(2)} Z`;
+}
+
+function renderDonut(){
+  const filtered = transactions.filter(t=>t.type === currentChart);
+  const byCat = {};
+  filtered.forEach(t=>{ byCat[t.category] = (byCat[t.category]||0) + t.amount; });
+  const entries = Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+  const total = entries.reduce((s,[,v])=>s+v,0);
+
+  const svg = $('donutSvg');
+  svg.innerHTML = '';
+  const legend = $('legendList');
+  legend.innerHTML = '';
+  const caption = $('donutCaption');
+  caption.textContent = 'Detay için bir dilime dokun';
+
+  const cx = 140, cy = 120, rOuter = 72, rInner = 44, rLabel = 100;
+
+  if(total === 0){
+    const c = document.createElementNS(NS,'circle');
+    c.setAttribute('cx',cx); c.setAttribute('cy',cy); c.setAttribute('r',rOuter);
+    c.setAttribute('fill','none'); c.setAttribute('stroke','#DCD3B8'); c.setAttribute('stroke-width','22');
+    svg.appendChild(c);
+    legend.innerHTML = '<div class="empty-state">Bu kategoride kayıt yok.</div>';
+    caption.textContent = '';
+    return;
+  }
+
+  const slices = [];
+  let cumAngle = 0;
+  entries.forEach(([cat, val], i)=>{
+    const frac = val/total;
+    const startA = cumAngle;
+    const endA = cumAngle + frac*360;
+    cumAngle = endA;
+    slices.push({ cat, val, frac, startA, endA, color: PALETTE[i % PALETTE.length], index:i });
+  });
+
+  function setHighlight(idx){
+    svg.querySelectorAll('.donut-slice').forEach(el=>{
+      const same = Number(el.dataset.idx) === idx;
+      el.classList.toggle('dimmed', idx !== null && !same);
+      el.classList.toggle('active-slice', same && idx !== null);
+    });
+    svg.querySelectorAll('.donut-leader').forEach(el=>{
+      el.classList.toggle('dimmed', idx !== null && Number(el.dataset.idx) !== idx);
+    });
+    svg.querySelectorAll('.donut-label').forEach(el=>{
+      el.classList.toggle('dimmed', idx !== null && Number(el.dataset.idx) !== idx);
+    });
+    legend.querySelectorAll('.legend-item').forEach(el=>{
+      el.classList.toggle('dimmed', idx !== null && Number(el.dataset.idx) !== idx);
+    });
+    if(idx === null){
+      caption.textContent = 'Detay için bir dilime dokun';
+    } else {
+      const s = slices[idx];
+      caption.innerHTML = `<b>${s.cat}</b> — ${fmt(s.val)} (${(s.frac*100).toFixed(1)}%)`;
+    }
+  }
+
+  slices.forEach(s=>{
+    const path = document.createElementNS(NS,'path');
+    path.setAttribute('d', donutSlicePath(cx, cy, rOuter, rInner, s.startA, s.endA));
+    path.setAttribute('fill', s.color);
+    path.classList.add('donut-slice');
+    path.dataset.idx = s.index;
+    path.addEventListener('mouseenter', ()=> setHighlight(s.index));
+    path.addEventListener('mouseleave', ()=> setHighlight(null));
+    path.addEventListener('click', ()=> setHighlight(s.index));
+    svg.appendChild(path);
+  });
+
+  // labels with leader lines, only for slices with enough room
+  slices.forEach(s=>{
+    if(s.frac < 0.035) return;
+    const mid = (s.startA + s.endA) / 2;
+    const p1 = polarPoint(cx, cy, rOuter + 2, mid);
+    const p2 = polarPoint(cx, cy, rLabel - 6, mid);
+    const p3 = polarPoint(cx, cy, rLabel, mid);
+
+    const line = document.createElementNS(NS,'polyline');
+    line.setAttribute('points', `${p1.x.toFixed(1)},${p1.y.toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`);
+    line.classList.add('donut-leader');
+    line.dataset.idx = s.index;
+    svg.appendChild(line);
+
+    const text = document.createElementNS(NS,'text');
+    text.classList.add('donut-label');
+    text.dataset.idx = s.index;
+    text.setAttribute('y', p3.y.toFixed(1));
+    text.setAttribute('text-anchor', p3.x < cx ? 'end' : 'start');
+    text.setAttribute('x', p3.x.toFixed(1));
+    text.addEventListener('mouseenter', ()=> setHighlight(s.index));
+    text.addEventListener('mouseleave', ()=> setHighlight(null));
+    text.addEventListener('click', ()=> setHighlight(s.index));
+
+    const tspan1 = document.createElementNS(NS,'tspan');
+    tspan1.setAttribute('x', p3.x.toFixed(1));
+    tspan1.textContent = s.cat;
+    text.appendChild(tspan1);
+
+    const tspan2 = document.createElementNS(NS,'tspan');
+    tspan2.setAttribute('x', p3.x.toFixed(1));
+    tspan2.setAttribute('dy', '13');
+    tspan2.setAttribute('class','pct');
+    tspan2.textContent = `${(s.frac*100).toFixed(1)}%`;
+    text.appendChild(tspan2);
+
+    svg.appendChild(text);
+  });
+
+  // legend (full list, including small slices without on-chart labels)
+  slices.forEach(s=>{
+    const item = document.createElement('div');
+    item.className = 'legend-item';
+    item.dataset.idx = s.index;
+    item.innerHTML = `<span class="legend-dot" style="background:${s.color}"></span>
+      <span class="legend-name">${s.cat}</span>
+      <span class="legend-pct">${(s.frac*100).toFixed(1)}%</span>`;
+    item.addEventListener('mouseenter', ()=> setHighlight(s.index));
+    item.addEventListener('mouseleave', ()=> setHighlight(null));
+    item.addEventListener('click', ()=> setHighlight(s.index));
+    legend.appendChild(item);
+  });
+}
+
+/* ---------- weekly/monthly/yearly averages ---------- */
+function getISOWeekKey(dateStr){
+  const d = new Date(dateStr);
+  const target = new Date(d.valueOf());
+  const dayNr = (d.getDay() + 6) % 7; // Monday = 0
+  target.setDate(target.getDate() - dayNr + 3);
+  const firstThursday = new Date(target.getFullYear(), 0, 4);
+  const fDayNr = (firstThursday.getDay() + 6) % 7;
+  firstThursday.setDate(firstThursday.getDate() - fDayNr + 3);
+  const week = 1 + Math.round((target - firstThursday) / (7*86400000));
+  return `${target.getFullYear()}-W${String(week).padStart(2,'0')}`;
+}
+function getMonthKey(dateStr){
+  const d = new Date(dateStr);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+function getYearKey(dateStr){
+  return String(new Date(dateStr).getFullYear());
+}
+
+function computePeriodAverages(){
+  const weekly = {}, monthly = {}, yearly = {};
+  transactions.forEach(t=>{
+    const wk = getISOWeekKey(t.date), mk = getMonthKey(t.date), yk = getYearKey(t.date);
+    weekly[wk]  = weekly[wk]  || {gelir:0, gider:0};
+    monthly[mk] = monthly[mk] || {gelir:0, gider:0};
+    yearly[yk]  = yearly[yk]  || {gelir:0, gider:0};
+    weekly[wk][t.type]  += t.amount;
+    monthly[mk][t.type] += t.amount;
+    yearly[yk][t.type]  += t.amount;
+  });
+  const summarize = (buckets) => {
+    const keys = Object.keys(buckets);
+    if(keys.length === 0) return {gelir:0, gider:0, count:0};
+    const totals = keys.reduce((acc,k)=>{
+      acc.gelir += buckets[k].gelir;
+      acc.gider += buckets[k].gider;
+      return acc;
+    }, {gelir:0, gider:0});
+    return { gelir: totals.gelir/keys.length, gider: totals.gider/keys.length, count: keys.length };
+  };
+  return { weekly: summarize(weekly), monthly: summarize(monthly), yearly: summarize(yearly) };
+}
+
+function renderAverages(){
+  const grid = $('avgGrid');
+  const { weekly, monthly, yearly } = computePeriodAverages();
+  const cols = [
+    { title:'Haftalık Ortalama', data: weekly, unit:'hafta' },
+    { title:'Aylık Ortalama', data: monthly, unit:'ay' },
+    { title:'Yıllık Ortalama', data: yearly, unit:'yıl' }
+  ];
+  grid.innerHTML = '';
+  cols.forEach(c=>{
+    const net = c.data.gelir - c.data.gider;
+    const col = document.createElement('div');
+    col.className = 'avg-col';
+    if(c.data.count === 0){
+      col.innerHTML = `<div class="avg-title">${c.title}</div><div class="empty-state" style="padding:14px 4px;">Henüz veri yok</div>`;
+    } else {
+      col.innerHTML = `
+        <div class="avg-title">${c.title}</div>
+        <div class="avg-line gelir"><span>Gelir</span><span class="amt">${fmt(c.data.gelir)}</span></div>
+        <div class="avg-line gider"><span>Gider</span><span class="amt">${fmt(c.data.gider)}</span></div>
+        <div class="avg-line net"><span>Net</span><span class="amt">${fmt(net)}</span></div>
+        <div class="avg-count">${c.data.count} ${c.unit} verisine göre</div>
+      `;
+    }
+    grid.appendChild(col);
+  });
+}
+
+/* ---------- master render ---------- */
+function renderSummary(){
+  const {gelir, gider, net} = computeTotals();
+  $('totalGelir').textContent = fmt(gelir);
+  $('totalGider').textContent = fmt(gider);
+  $('netBalance').textContent = fmt(net);
+  $('portfolioTotal').textContent = fmt(computePortfolioTotal());
+}
+
+function render(){
+  renderSummary();
+  renderAccounts();
+  renderFeaturedGoal();
+  renderMilestones();
+  renderWishlist();
+  renderLedger();
+  renderDonut();
+  renderAverages();
+}
+
+/* ---------- events ---------- */
+$('btnTypeGelir').addEventListener('click', ()=> setType('gelir'));
+$('btnTypeGider').addEventListener('click', ()=> setType('gider'));
+$('addBtn').addEventListener('click', addTransaction);
+
+$('accAddBtn').addEventListener('click', addOrUpdateAccount);
+
+$('msAddBtn').addEventListener('click', addOrUpdateMilestone);
+
+$('wlAddBtn').addEventListener('click', addWish);
+
+$('milestoneSelect').addEventListener('change', (e)=>{
+  featuredMilestoneId = e.target.value;
+  saveState();
+  renderFeaturedGoal();
+});
+
+$('chartToggleGider').addEventListener('click', ()=>{
+  currentChart='gider';
+  $('chartToggleGider').classList.add('active');
+  $('chartToggleGelir').classList.remove('active');
+  renderDonut();
+});
+$('chartToggleGelir').addEventListener('click', ()=>{
+  currentChart='gelir';
+  $('chartToggleGelir').classList.add('active');
+  $('chartToggleGider').classList.remove('active');
+  renderDonut();
+});
+
+$('backupBtn').addEventListener('click', downloadBackup);
+$('restoreBtn').addEventListener('click', ()=> $('restoreFileInput').click());
+$('restoreFileInput').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(file) restoreBackup(file);
+  e.target.value = '';
+});
+
+$('dateInput').value = new Date().toISOString().slice(0,10);
+populateCategories();
+loadAll();
+</script>
+</body>
+</html>
